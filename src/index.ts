@@ -12,7 +12,7 @@ async function main() {
 	 * Create a connection and initialize a keypair if one doesn't already exists.
 	 * If a keypair exists, airdrop a sol if needed.
 	 */
-	const connection = new Connection(clusterApiUrl(CLUSTER))
+	const connection = new Connection('http://127.0.0.1:8899')
 	const mintOwnerUser = await initializeKeypair(connection)
 
 	console.log(`public key: ${mintOwnerUser.publicKey.toBase58()}`)
@@ -65,18 +65,24 @@ async function main() {
 	 *
 	 * Should throw `SendTransactionError`
 	 */
-	console.log()
-	await tryTransfer(
-		CLUSTER,
-		connection,
-		mintOwnerUser,
-		mintKeypair.publicKey,
-		sourceAccount,
-		destinationAccount,
-		sourceKeypair.publicKey,
-		decimals,
-		[sourceKeypair, destinationKeypair]
-	)
+	try {
+		console.log()
+		await tryTransfer(
+			CLUSTER,
+			connection,
+			mintOwnerUser,
+			mintKeypair.publicKey,
+			sourceAccount,
+			destinationAccount,
+			sourceKeypair.publicKey,
+			decimals,
+			[sourceKeypair, destinationKeypair]
+		)
+	} catch (error) {
+		console.log("This is correct, the transfer should fail. Note the custom program error: 0x25 - Transfer is disabled for this mint")
+		console.log(error)
+	}
+
 }
 
 main()
