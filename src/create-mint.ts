@@ -59,7 +59,7 @@ export async function createNonTransferrableMint(
 		{commitment: 'finalized'}
 	)
 	console.log(
-		`Check the transaction at: https://explorer.solana.com/tx/${signature}?cluster=${cluster}`
+		`Check the transaction at: https://explorer.solana.com/tx/${signature}?cluster=${cluster} \n\n`
 	)
 
 	return signature

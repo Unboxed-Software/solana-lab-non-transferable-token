@@ -1,9 +1,18 @@
-import {Cluster, Connection, clusterApiUrl, Keypair} from '@solana/web3.js'
+import {
+	Cluster,
+	Connection,
+	clusterApiUrl,
+	Keypair,
+	LAMPORTS_PER_SOL,
+} from '@solana/web3.js'
 import {initializeKeypair} from './keypair-helpers'
 import {createNonTransferrableMint} from './create-mint'
-import {tryTransfer} from './transfers'
-import {mintToken} from './mint-token'
-import {createAccountForTransaction} from './create-account'
+import {
+	TOKEN_2022_PROGRAM_ID,
+	createAccount,
+	mintTo,
+	transferChecked,
+} from '@solana/spl-token'
 
 const CLUSTER: Cluster = 'devnet'
 
@@ -12,24 +21,26 @@ async function main() {
 	 * Create a connection and initialize a keypair if one doesn't already exists.
 	 * If a keypair exists, airdrop a sol if needed.
 	 */
-	const connection = new Connection('http://127.0.0.1:8899')
-	const mintOwnerUser = await initializeKeypair(connection)
+	const connection = new Connection(clusterApiUrl(CLUSTER))
+	const payer = await initializeKeypair(connection)
 
-	console.log(`public key: ${mintOwnerUser.publicKey.toBase58()}`)
+	console.log(`public key: ${payer.publicKey.toBase58()}`)
 
 	const mintKeypair = Keypair.generate()
-	console.log('\nmint public key: ' + mintKeypair.publicKey.toBase58())
+	const mint = mintKeypair.publicKey
+	console.log(
+		'\nmint public key: ' + mintKeypair.publicKey.toBase58() + '\n\n'
+	)
 
 	/**
 	 * Creating a non-transferrable token mint
 	 */
-	console.log()
 	const decimals = 9
 
 	await createNonTransferrableMint(
 		CLUSTER,
 		connection,
-		mintOwnerUser,
+		payer,
 		mintKeypair,
 		decimals
 	)
@@ -37,27 +48,45 @@ async function main() {
 	/**
 	 * Creating a source account for a transfer and minting 1 token to that account
 	 */
-	console.log()
+	console.log('Creating a source account...')
 	const sourceKeypair = Keypair.generate()
-	const sourceAccount = await mintToken(
+	const sourceAccount = await createAccount(
 		connection,
-		mintOwnerUser,
-		mintKeypair.publicKey,
-		sourceKeypair.publicKey
+		payer,
+		mint,
+		sourceKeypair.publicKey,
+		undefined,
+		{commitment: 'finalized'},
+		TOKEN_2022_PROGRAM_ID
+	)
+
+	console.log('Minting 1 token...\n\n')
+	const amount = 1 * LAMPORTS_PER_SOL
+	await mintTo(
+		connection,
+		payer,
+		mint,
+		sourceAccount,
+		payer,
+		amount,
+		[payer],
+		{commitment: 'finalized'},
+		TOKEN_2022_PROGRAM_ID
 	)
 
 	/**
 	 * Creating a destination account for a transfer
 	 */
-	console.log()
-	console.log('Creating a destination account...')
+	console.log('Creating a destination account...\n\n')
 	const destinationKeypair = Keypair.generate()
-	const destinationAccount = await createAccountForTransaction(
+	const destinationAccount = await createAccount(
 		connection,
-		mintOwnerUser,
+		payer,
 		mintKeypair.publicKey,
-		sourceKeypair.publicKey,
-		destinationKeypair
+		destinationKeypair.publicKey,
+		undefined,
+		{commitment: 'finalized'},
+		TOKEN_2022_PROGRAM_ID
 	)
 
 	/**
@@ -65,24 +94,31 @@ async function main() {
 	 *
 	 * Should throw `SendTransactionError`
 	 */
+	console.log('Trying transferring non-transferrable mint...')
 	try {
-		console.log()
-		await tryTransfer(
-			CLUSTER,
+		const signature = await transferChecked(
 			connection,
-			mintOwnerUser,
-			mintKeypair.publicKey,
+			payer,
 			sourceAccount,
+			mint,
 			destinationAccount,
-			sourceKeypair.publicKey,
+			sourceAccount,
+			amount,
 			decimals,
-			[sourceKeypair, destinationKeypair]
+			[sourceKeypair, destinationKeypair],
+			{commitment: 'finalized'},
+			TOKEN_2022_PROGRAM_ID
 		)
-	} catch (error) {
-		console.log("This is correct, the transfer should fail. Note the custom program error: 0x25 - Transfer is disabled for this mint")
-		console.log(error)
+		console.log(
+			`Check the transaction at: https://explorer.solana.com/tx/${signature}?cluster=${CLUSTER}`
+		)
+	} catch (e) {
+		console.log(
+			'This transfer is failing because the mint is non-transferrable. Check out the program logs: ',
+			(e as any).logs,
+			'\n\n'
+		)
 	}
-
 }
 
 main()
