@@ -6,7 +6,7 @@ import {
 	LAMPORTS_PER_SOL,
 } from '@solana/web3.js'
 import {initializeKeypair} from './keypair-helpers'
-import {createNonTransferrableMint} from './create-mint'
+import {createNonTransferableMint} from './create-mint'
 import {
 	TOKEN_2022_PROGRAM_ID,
 	createAccount,
@@ -33,11 +33,11 @@ async function main() {
 	)
 
 	/**
-	 * Creating a non-transferrable token mint
+	 * Creating a non-transferable token mint
 	 */
 	const decimals = 9
 
-	await createNonTransferrableMint(
+	await createNonTransferableMint(
 		CLUSTER,
 		connection,
 		payer,
@@ -94,7 +94,7 @@ async function main() {
 	 *
 	 * Should throw `SendTransactionError`
 	 */
-	console.log('Trying transferring non-transferrable mint...')
+	console.log('Trying transferring non-transferable mint...')
 	try {
 		const signature = await transferChecked(
 			connection,
@@ -114,7 +114,7 @@ async function main() {
 		)
 	} catch (e) {
 		console.log(
-			'This transfer is failing because the mint is non-transferrable. Check out the program logs: ',
+			'This transfer is failing because the mint is non-transferable. Check out the program logs: ',
 			(e as any).logs,
 			'\n\n'
 		)

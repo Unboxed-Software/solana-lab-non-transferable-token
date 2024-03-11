@@ -16,7 +16,7 @@ import {
 	createInitializeNonTransferableMintInstruction,
 } from '@solana/spl-token'
 
-export async function createNonTransferrableMint(
+export async function createNonTransferableMint(
 	cluster: Cluster,
 	connection: Connection,
 	payer: Keypair,
@@ -29,7 +29,7 @@ export async function createNonTransferrableMint(
 	const mintLamports =
 		await connection.getMinimumBalanceForRentExemption(mintLength)
 
-	console.log('Creating a transaction with non-transferrable instruction...')
+	console.log('Creating a transaction with non-transferable instruction...')
 	const mintTransaction = new Transaction().add(
 		SystemProgram.createAccount({
 			fromPubkey: payer.publicKey,
