@@ -5,7 +5,7 @@ import {
 	Keypair,
 	LAMPORTS_PER_SOL,
 } from '@solana/web3.js'
-import {initializeKeypair} from './keypair-helpers'
+import {initializeKeypair} from '@solana-developers/helpers'
 import {createNonTransferableMint} from './create-mint'
 import {
 	TOKEN_2022_PROGRAM_ID,
@@ -13,6 +13,8 @@ import {
 	mintTo,
 	transferChecked,
 } from '@solana/spl-token'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const CLUSTER: Cluster = 'devnet'
 
