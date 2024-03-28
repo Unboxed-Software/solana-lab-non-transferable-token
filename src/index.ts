@@ -1,5 +1,7 @@
 import {Cluster, Connection, clusterApiUrl, Keypair} from '@solana/web3.js'
-import {initializeKeypair} from './keypair-helpers'
+import {initializeKeypair} from '@solana-developers/helpers'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const CLUSTER: Cluster = 'devnet'
 
